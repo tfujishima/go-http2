@@ -1,0 +1,3 @@
+# go-http2
+Go言語の練習で作っているWebサーバ  
+config.tml.sample -> config.tml にしていい感じに設定すると動くはず...
