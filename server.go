@@ -42,6 +42,9 @@ func create_server_handle(web_root string, index string, php config.Php) func(ht
 	fileServer := http.StripPrefix("/", http.FileServer(http.Dir(web_root)))
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Println(r.Method + ": " + web_root + r.URL.Path)
+		if index != "index.html" && r.URL.Path[len(r.URL.Path)-1:] == "/" {
+			r.URL.Path += index
+		}
 		pos := strings.LastIndex(r.URL.Path, ".")
 		if php.Enabled && pos != -1 && r.URL.Path[pos:] == ".php" {
 			fcgi, err := fcgiclient.Dial("unix", php.FpmSock)
