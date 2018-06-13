@@ -20,4 +20,3 @@ web_root = "/var/www/example"
 [php]
 enabled = true
 fpm_sock = "/var/run/php-fpm/php-fpm.sock"
-index = "index.php"

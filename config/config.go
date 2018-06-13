@@ -29,7 +29,6 @@ type Vhost struct {
 type Php struct {
 	Enabled bool
 	FpmSock string `toml:"fpm_sock"`
-	Index   string
 }
 
 func LoadConfig() Config {
