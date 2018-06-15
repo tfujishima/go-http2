@@ -2,11 +2,11 @@ package main
 
 import (
 	"./config"
-	"fmt"
 	"github.com/tomasen/fcgi_client"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 	"sync"
 )
@@ -69,7 +69,11 @@ func create_server_handle(web_root string, index string, php config.Php) func(ht
 			if err != nil {
 				log.Fatal("err@body:", err)
 			}
-			fmt.Fprint(w, string(content))
+			if resp.Header.Get("Status") != "" {
+				status_code, _ := strconv.Atoi(resp.Header.Get("Status")[:3])
+				w.WriteHeader(status_code)
+			}
+			w.Write([]byte(content))
 		} else {
 			fileServer.ServeHTTP(w, r)
 		}
