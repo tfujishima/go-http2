@@ -2,6 +2,7 @@ package main
 
 import (
 	"./config"
+	"bytes"
 	"github.com/tomasen/fcgi_client"
 	"io/ioutil"
 	"log"
@@ -61,6 +62,11 @@ func create_server_handle(web_root string, index string, php config.Php) func(ht
 			} else if r.Method == "POST" {
 				r.ParseForm()
 				resp, err = fcgi.PostForm(env, r.Form)
+			} else {
+				resp = &http.Response{
+					Body:       ioutil.NopCloser(bytes.NewBufferString("This http method is not supported.")),
+				}
+				w.WriteHeader(501)
 			}
 			if err != nil {
 				log.Fatal("err@resp:", err)
