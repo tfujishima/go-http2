@@ -16,6 +16,9 @@ ssl_cert = "/etc/pki/tls/certs/localhost.crt"
 [[server.vhost]]
 server_name = "www.example.com"
 web_root = "/var/www/example"
+[[server.vhost.proxy]]
+path = "/websocket"
+url = "ws://localhost:9000/websocket"
 
 [php]
 enabled = true

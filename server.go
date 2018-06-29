@@ -3,8 +3,10 @@ package main
 import (
 	"./config"
 	"./phpfpm"
+	"github.com/koding/websocketproxy"
 	"log"
 	"net/http"
+	"net/url"
 	"strings"
 	"sync"
 )
@@ -16,8 +18,20 @@ func main() {
 		wg.Add(1)
 		mux := http.NewServeMux()
 		mux.HandleFunc("/", createServerHandle(v.WebRoot, v.Index, conf.Php))
+		for _, proxy := range v.Proxies {
+			if proxy.IsWebsocketProxy() {
+				u, _ := url.Parse(proxy.Url)
+				mux.Handle(proxy.Path, websocketproxy.ProxyHandler(u))
+			}
+		}
 		for _, vhost := range v.Vhosts {
 			mux.HandleFunc(vhost.Name+"/", createServerHandle(vhost.WebRoot, vhost.Index, conf.Php))
+			for _, proxy := range vhost.Proxies {
+				if proxy.IsWebsocketProxy() {
+					u, _ := url.Parse(proxy.Url)
+					mux.Handle(vhost.Name+proxy.Path, websocketproxy.ProxyHandler(u))
+				}
+			}
 		}
 		log.Println("server start port ", v.Port)
 		go func(server config.Server) {
@@ -44,11 +58,16 @@ func createServerHandle(webRoot string, index string, php config.Php) func(http.
 			r.URL.Path += index
 		}
 		if php.Enabled && strings.HasSuffix(r.URL.Path, ".php") {
-			if r.Method == "GET" {
+			switch r.Method {
+			case "GET":
 				phpfpm.Get(w, r, webRoot, php.FpmSock)
-			} else if r.Method == "POST" {
+			case "POST":
 				phpfpm.Post(w, r, webRoot, php.FpmSock)
-			} else {
+			case "DELETE":
+				phpfpm.Delete(w, r, webRoot, php.FpmSock)
+			case "PUT":
+				phpfpm.Put(w, r, webRoot, php.FpmSock)
+			default:
 				phpfpm.OtherHttpMethod(w)
 			}
 		} else {

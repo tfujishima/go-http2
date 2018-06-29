@@ -2,6 +2,7 @@ package config
 
 import (
 	"github.com/BurntSushi/toml"
+	"strings"
 )
 
 type Config struct {
@@ -17,6 +18,7 @@ type Server struct {
 	Key        string  `toml:"ssl_key"`
 	Cert       string  `toml:"ssl_cert"`
 	Vhosts     []Vhost `toml:"vhost"`
+	Proxies    []Proxy `toml:"proxy"`
 }
 
 type Vhost struct {
@@ -24,11 +26,25 @@ type Vhost struct {
 	Port    string
 	WebRoot string `toml:"web_root"`
 	Index   string
+	Proxies []Proxy `toml:"proxy"`
 }
 
 type Php struct {
 	Enabled bool
 	FpmSock string `toml:"fpm_sock"`
+}
+
+type Proxy struct {
+	Path string
+	Url  string
+}
+
+func (p *Proxy) IsWebsocketProxy() bool {
+	proto := p.Url[0:strings.Index(p.Url, "://")]
+	if proto == "ws" || proto == "wss" {
+		return true
+	}
+	return false
 }
 
 func LoadConfig() Config {

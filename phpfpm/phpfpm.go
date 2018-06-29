@@ -43,6 +43,38 @@ func Post(w http.ResponseWriter, r *http.Request, webRoot string, fpmSock string
 	sendResponse(w, resp)
 }
 
+func Delete(w http.ResponseWriter, r *http.Request, webRoot string, fpmSock string) {
+	fcgi := connectFpm(fpmSock)
+	env := make(map[string]string)
+	env["SCRIPT_FILENAME"] = webRoot + "/" + r.URL.Path
+	env["SERVER_SOFTWARE"] = "go / fcgiclient "
+	env["REMOTE_ADDR"] = "127.0.0.1"
+	env["QUERY_STRING"] = r.URL.RawQuery
+	env["REQUEST_METHOD"] = "DELETE"
+	env["CONTENT_LENGTH"] = "0"
+	resp, err := fcgi.Request(env, nil)
+	if err != nil {
+		log.Fatal("err@resp:", err)
+	}
+	sendResponse(w, resp)
+}
+
+func Put(w http.ResponseWriter, r *http.Request, webRoot string, fpmSock string) {
+	fcgi := connectFpm(fpmSock)
+	r.ParseForm()
+	body := bytes.NewReader([]byte(r.Form.Encode()))
+	env := make(map[string]string)
+	env["SCRIPT_FILENAME"] = webRoot + "/" + r.URL.Path
+	env["REQUEST_METHOD"] = "PUT"
+	env["CONTENT_LENGTH"] = strconv.Itoa(body.Len())
+	env["CONTENT_TYPE"] = "application/x-www-form-urlencoded"
+	resp, err := fcgi.Request(env, body)
+	if err != nil {
+		log.Fatal("err@resp:", err)
+	}
+	sendResponse(w, resp)
+}
+
 func OtherHttpMethod(w http.ResponseWriter) {
 	resp := &http.Response{
 		Body: ioutil.NopCloser(bytes.NewBufferString("This http method is not supported.")),
